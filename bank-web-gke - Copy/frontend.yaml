@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victor-frontend-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: victor-frontend
+  template:
+    metadata:
+      labels:
+        app: victor-frontend
+    spec:
+      containers:
+      - name: bank-frontend
+        image: us-central1-docker.pkg.dev/gcp-class-14/victor-bank-gke-repo/victor-frontend-image:$COMMIT_SHA
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victor-frontend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: victor-frontend
+  ports:
+    - port: 80
+      targetPort: 80

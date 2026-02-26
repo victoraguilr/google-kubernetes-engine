@@ -1,0 +1,36 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/gcp-class-14/victor-bank-gke-repo/victor-frontend-image:$COMMIT_SHA'
+      - '-f'
+      - 'Dockerfile-before-https-first' 
+      - '--build-arg'
+      - 'REACT_APP_API_URL=$_BACKEND_URL'
+      - '.'
+    dir: 'bank-web-gke - Copy'
+    id: Build Frontend Container
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/gcp-class-14/victor-bank-gke-repo/victor-frontend-image:$COMMIT_SHA']
+    dir: 'bank-web-gke - Copy'
+    id: Push Frontend Image
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', 'bank-web-gke - Copy/frontend.yaml']
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=victor-gke-cluster'
+    id: Deploy to GKE
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/victor-frontend-deployment'
+      - 'bank-frontend=us-central1-docker.pkg.dev/gcp-class-14/victor-bank-gke-repo/victor-frontend-image:$COMMIT_SHA'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=victor-gke-cluster'
+    id: Update K8s Image
